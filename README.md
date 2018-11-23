@@ -315,4 +315,5 @@ export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Hello);
 
 ```
 注意： 第 2 行代码，我最开始这样子做的，可是一直报错，说的是 `react-redux` 中不存在这个模块，不应该啊，以前我都这么用的啊，难道我的环境出了问题吗，于是我查看了 `react-redux` 的 issues，果然后面的版本就移除了这个对象，附上 [react-redux的issues地址](https://github.com/DefinitelyTyped/DefinitelyTyped/issues/26840)，另一个方式是直接从 `redux` 中导入完美使用。还有个问题是我在使用 `import { combineReducers } from 'redux';` 过程中遇到了坑，怎么说呢，自己未自己买单，2层 `combineReducers` 我是一个喜欢尝试的人，结果不断的报错，导致我们的 `Props` 没有成功挂载到组件上，一直获取不到值，`state` 有值，但是 没有 `方法`，所以以此为戒。
- 
+
+我们都知道，异步问题复杂多变，对于大型的项目更是如此，结合我们目前使用的 redux 我进行了思考，我的目标是打造从简单到复杂的项目，随着一些业务的增加，尤其是在一些 cms 系统中更是复杂，开始第一反应想到的异步模块是 😬 `redux-thunk`，为啥子，因为它成本低，任何事不是两全的，使用简单的同时，带来了后期复杂度提升之后的维护成本的提高，于是抛弃了 `redux-thunk`，准备周末踏上😃 `redux-saga` 这个被人人称为不好用成本高的船。
