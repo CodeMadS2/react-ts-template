@@ -1,3 +1,4 @@
+// 前端项目入口
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';

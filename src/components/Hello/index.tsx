@@ -6,6 +6,7 @@ export interface Props {
     enthusiasmLevel?: number;
     onIncrement?: () => void;
     onDecrement?: () => void;
+    onGetInitList?: (data: number) => void;
 }
 
 export default class Hello extends React.Component<Props, {}> {
@@ -14,11 +15,10 @@ export default class Hello extends React.Component<Props, {}> {
     }
     render() {
         const { name, enthusiasmLevel = 1, onIncrement, onDecrement } = this.props;
-        console.log(this.props);
+
         if (enthusiasmLevel <= 0) {
             throw new Error('You could be a little more enthusiastic. :D');
         }
-        console.log(enthusiasmLevel);
         return (
             <div className="hello">
                 <div className="greeting">
@@ -29,14 +29,16 @@ export default class Hello extends React.Component<Props, {}> {
                     <button onClick={onIncrement}>+</button>
                 </div>
             </div>
-        );
+        )
     }
-    componentDidUpdate(data: any) {
-        console.log(data);
+    componentDidMount() {
+        // 组件内触发 saga 调用式例
+        // const { onGetInitList } = this.props;
+        // !处理TypeScript 报错问题
+        // onGetInitList!(1012003);
     }
 }
 
 function getExclamationMarks(numChars: number) {
-    console.log(Array(numChars + 1).join('!'))
     return Array(numChars + 1).join('!');
 }
