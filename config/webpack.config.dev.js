@@ -186,8 +186,17 @@ module.exports = {
                 loader: require.resolve('css-loader'),
                 options: {
                   importLoaders: 1,
+                  modules: true,
+                  localIdentName: '[name]__[local]__[hash:base64:5]', //
                 },
               },
+              // {
+              //   loader: 'typings-for-css-modules-loader',
+              //   options: {
+              //     modules: true,
+              //     namedExport: true
+              //   }
+              // },
               {
                 loader: require.resolve('postcss-loader'),
                 options: {
@@ -222,11 +231,18 @@ module.exports = {
             test: /\.css$/,
             use: [
               require.resolve('style-loader'),
+              // {
+              //   loader: require.resolve('css-loader'),
+              //   options: {
+              //     importLoaders: 1,
+              //   },
+              // },
               {
-                loader: require.resolve('css-loader'),
+                loader: 'typings-for-css-modules-loader',
                 options: {
-                  importLoaders: 1,
-                },
+                  modules: true,
+                  namedExport: true
+                }
               },
               {
                 loader: require.resolve('postcss-loader'),

@@ -6,7 +6,7 @@ import Hello from './components/Hello';
 import * as actions from "./store/actionCreators";
 
 // 页面布局样式
-import './style.less';
+import * as styles from './style.less';
 import { homeState } from "./store/types";
 
 export interface Props {
@@ -20,7 +20,7 @@ class Home extends React.PureComponent<Props, {}> {
       return (
           <div>
               <Hello name='TypeScript' />
-              <div className="pageName">{ data }</div>
+              <div className={styles.pageName}>{ data }</div>
           </div>
       )
     }

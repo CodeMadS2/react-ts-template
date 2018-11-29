@@ -1,5 +1,7 @@
 import * as React from 'react';
-import './index.less';
+
+// css 模块化处理方案
+import * as styles from './index.css';
 
 export interface Props {
     name: string;
@@ -20,7 +22,7 @@ export default class Hello extends React.Component<Props, {}> {
             throw new Error('You could be a little more enthusiastic. :D');
         }
         return (
-            <div className="hello">
+            <div className={styles['hello']}>
                 <div className="greeting">
                     Hello {name + getExclamationMarks(enthusiasmLevel)}
                 </div>
