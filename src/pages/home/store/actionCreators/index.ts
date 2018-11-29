@@ -13,10 +13,10 @@ export interface GetInitList {
     data: number
 }
 // redux-saga 私有
-export interface InitListAction {
-    type: constants.INIT_LIST_ACTION;
-    data: number
-}
+// export interface InitListAction {
+//     type: constants.INIT_LIST_ACTION;
+//     data: number
+// }
 
 
 export interface UserFetchSucceeded {
@@ -32,7 +32,7 @@ export interface UserFetchFailed {
 export type EnthusiasmAction = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;
 
 // 页面级
-export type homePageAction = GetInitList | InitListAction | UserFetchSucceeded | UserFetchFailed;
+export type homePageAction = GetInitList | UserFetchSucceeded | UserFetchFailed;
 
 // 组件级 + 页面级 汇总
 export type homePageActions = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;

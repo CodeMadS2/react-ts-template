@@ -1,7 +1,6 @@
 
 ## 目录
 
-- [快捷方式](#快捷方式)
 - [写作背景](#写作背景)
 - [写作目标](#写作目标)
 - [项目安装](#项目安装)
@@ -10,14 +9,8 @@
   + [依赖包拓展](#依赖包拓展)
 - [项目调整](#结构调整)
   + [初步思考](#初次回顾)
-
-## 快捷方式
-
-列此表格，旨在更加快捷的找到对应写作章节对应的分支()
-
-| 文章章节 | 分支名 | 描述 |
-| :------: | :------: | :------: |
-| [初次尝试](https://github.com/CodeMadS2/react-ts-template/tree/feature/first-try) | feature/first-try | 基于项目初始化后进行的简单修改 |
+  + [redux-saga刨坑](#redux-saga刨坑)
+  + [引入css模块机制](#引入css模块机制)
 
 
 ## 写作背景
@@ -134,7 +127,7 @@ react-ts-template/
 
 我这里简单写了个 `Hello` 组件(`src/component/Hello`)
 
-```javascript
+```typescript
 import * as React from 'react';
 import './index.css';
 
@@ -284,7 +277,7 @@ react-ts-template/
 
 我下面谈谈我在结合 TypeScript 使用的过程中遇到的坑，谈一下我在对 Hello 组件进行 Props 检验
 
-```javascript
+```typescript
 import { Dispatch } from 'redux';
 // import { connect, Dispatch } from 'react-redux';
 import { connect } from 'react-redux';
@@ -316,4 +309,513 @@ export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Hello);
 ```
 注意： 第 2 行代码，我最开始这样子做的，可是一直报错，说的是 `react-redux` 中不存在这个模块，不应该啊，以前我都这么用的啊，难道我的环境出了问题吗，于是我查看了 `react-redux` 的 issues，果然后面的版本就移除了这个对象，附上 [react-redux的issues地址](https://github.com/DefinitelyTyped/DefinitelyTyped/issues/26840)，另一个方式是直接从 `redux` 中导入完美使用。还有个问题是我在使用 `import { combineReducers } from 'redux';` 过程中遇到了坑，怎么说呢，自己未自己买单，2层 `combineReducers` 我是一个喜欢尝试的人，结果不断的报错，导致我们的 `Props` 没有成功挂载到组件上，一直获取不到值，`state` 有值，但是 没有 `方法`，所以以此为戒。
 
+### redux-saga刨坑
+
 我们都知道，异步问题复杂多变，对于大型的项目更是如此，结合我们目前使用的 redux 我进行了思考，我的目标是打造从简单到复杂的项目，随着一些业务的增加，尤其是在一些 cms 系统中更是复杂，开始第一反应想到的异步模块是 😬 `redux-thunk`，为啥子，因为它成本低，任何事不是两全的，使用简单的同时，带来了后期复杂度提升之后的维护成本的提高，于是抛弃了 `redux-thunk`，准备周末踏上😃 `redux-saga` 这个被人人称为不好用成本高的船。
+
+可能很多人有个误解，redux-saga是react的中间件，其实不然，我们从 [官方的文档](https://www.npmjs.com/package/redux-saga) 也可以知道特其实是介于 `redux` 的中间件，对于 `redux` 的中间件太多了，包括经常用到的 `redux-logger`(项目中我会引入)，还是那句话，我们要考虑到以后项目大了后每个页面有各自的数据状态，同时每个组件级也有自己的数据状态，同时有的状态是共有的，我们如果将状态柔到一起，以后很难维护，对于后面的小伙伴是坑，当然维护和项目复杂度是一把双刃剑，我选择了易于维护的，我的每个对应组件和页面的 `redux-saga` ，数据状态对应到对应的页面层级，最后通过各数据入口，我们将 `redux` 和 `redux-saga` 进行汇聚整合，是不是很完美，那就马上开始吧。
+
+结合官网说明，我先初试，执行以下脚本
+
+```sh
+npm install --save redux-saga
+```
+
+然后在根 `store` 目录建立 `sagas.ts` 用于汇聚所有 `sagas`，参照官网的 中间件注入方式进行了处理，如下：
+
+```typescript
+import { createStore, applyMiddleware } from 'redux';
+import createSagaMiddleware from 'redux-saga';
+// @ts-ignore
+import {createLogger} from 'redux-logger';
+import { composeWithDevTools } from 'redux-devtools-extension'
+
+import reducers from './reducer';
+import rootSaga from './sagas';
+
+const logger = createLogger();
+// 创建 并绑定saga 中间件
+const sagaMiddleware = createSagaMiddleware();
+
+export default function () {
+    const store = createStore(reducers, composeWithDevTools(
+        applyMiddleware(logger, sagaMiddleware)
+    ));
+    // run 之前要把安装 sagaMiddleware，防止报错
+    sagaMiddleware.run(rootSaga);
+    return store;
+}
+
+```
+
+对 `home` 页面 `store` 目录进行调整，如下
+
+```javascript
+store/
+  actionCreators/
+  constants/
+  reducers/
+  sagas/
+     index.ts
+  types/
+  index.ts
+  initState.ts      
+```
+
+我这里在代码里面在组件级和页面级都示例到 `redux-saga` ,我这里从豆瓣随便找了一个api 用来模拟异步，理解异步就行，不用纠结一些请求的结果，我们将来异步逻辑抽象到 `redux-saga` 文件，方便单元测试和异步统一管理，home页面的 `saga.ts` 如下:
+
+```typescript
+// import { takeEvery, put, select } from 'redux-saga/effects';
+import { takeEvery, put } from 'redux-saga/effects';
+import { delay } from 'redux-saga'
+import axios from 'axios';
+
+import { USER_FETCH_REQUESTED } from '../constants';
+import { userFetchSucceeded, userFetchFailed } from '../actionCreators';
+
+// @ts-ignore
+function* getInitList(actionData: Object) {
+    try {
+        const reqData = actionData['data'] || 1012002;
+        yield delay(5000);
+
+        const res = yield axios.get(`https://api.apiopen.top/EmailSearch?number=${reqData}`);
+        const action = yield res.data.code === 200 ? userFetchSucceeded(res.data.message) : userFetchFailed(res.data.message);
+        yield put(action);
+    } catch (e) {
+        yield put(userFetchFailed(e.message));
+    }
+}
+
+export default function* () {
+    // 拦截需要异步的 type
+    yield takeEvery(USER_FETCH_REQUESTED, getInitList);
+    // yield takeEvery('*', function* logger(action) {
+    //     const state = yield select();
+    //     console.log('action', action);
+    //     console.log('state after', state);
+    // })
+}
+```
+
+我这里将一些自我测试过的代码注释，你可以忽略，当然你放开注释也是可以执行的
+
+我们对 constants/index.ts 进行了调整，我们把一个异步的请求，成功(`USER_FETCH_SUCCEEDED`)和失败(`USER_FETCH_FAILED`)进行了拆分，其中发起请求(`USER_FETCH_REQUESTED `)的为如下：
+
+```typescript
+// constant
+export const INCREMENT_ENTHUSIASM = 'INCREMENT_ENTHUSIASM';
+export type INCREMENT_ENTHUSIASM = typeof INCREMENT_ENTHUSIASM;
+
+export const DECREMENT_ENTHUSIASM = 'DECREMENT_ENTHUSIASM';
+export type DECREMENT_ENTHUSIASM = typeof DECREMENT_ENTHUSIASM;
+
+export const USER_FETCH_REQUESTED = 'USER_FETCH_REQUESTED';
+export type USER_FETCH_REQUESTED = typeof USER_FETCH_REQUESTED;
+
+
+export const USER_FETCH_SUCCEEDED = 'USER_FETCH_SUCCEEDED';
+export type USER_FETCH_SUCCEEDED = typeof USER_FETCH_SUCCEEDED;
+
+export const USER_FETCH_FAILED = 'USER_FETCH_FAILED';
+export type USER_FETCH_FAILED = typeof USER_FETCH_FAILED;
+```
+
+我们调整 actionCreators/index.ts，注意这里面我们需要把 组件或者页面用到的 `action` 集合下，以便用于 容器组件和页面级的 `reducer ` ，防止 `typescript ` 报错
+
+```typescript
+import * as constants from '../constants'
+
+export interface IncrementEnthusiasm {
+    type: constants.INCREMENT_ENTHUSIASM;
+}
+
+export interface DecrementEnthusiasm {
+    type: constants.DECREMENT_ENTHUSIASM;
+}
+
+export interface GetInitList {
+    type: constants.USER_FETCH_REQUESTED;
+    data: number
+}
+// redux-saga 私有
+// export interface InitListAction {
+//     type: constants.INIT_LIST_ACTION;
+//     data: number
+// }
+
+
+export interface UserFetchSucceeded {
+    type: constants.USER_FETCH_SUCCEEDED;
+    message: string
+}
+export interface UserFetchFailed {
+    type: constants.USER_FETCH_FAILED;
+    message: string
+}
+
+// 组件级
+export type EnthusiasmAction = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;
+
+// 页面级
+export type homePageAction = GetInitList | UserFetchSucceeded | UserFetchFailed;
+
+// 组件级 + 页面级 汇总
+export type homePageActions = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;
+
+
+
+export function incrementEnthusiasm(): IncrementEnthusiasm {
+    return {
+        type: constants.INCREMENT_ENTHUSIASM
+    }
+}
+
+export function decrementEnthusiasm(): DecrementEnthusiasm {
+    return {
+        type: constants.DECREMENT_ENTHUSIASM
+    }
+}
+// redux-sage 异步调用
+export function getInitList(data: number):GetInitList {
+    return {
+        type: constants.USER_FETCH_REQUESTED,
+        data: data
+    }
+}
+
+export function userFetchSucceeded(message: string): UserFetchSucceeded {
+    return {
+        type: constants.USER_FETCH_SUCCEEDED,
+        message
+    }
+}
+export function userFetchFailed(message: string): UserFetchFailed {
+    return {
+        type: constants.USER_FETCH_FAILED,
+        message
+    }
+}
+```
+然后开始 reducers/index.ts
+
+```typescript
+import update from 'react-addons-update';
+
+// 导出为 当前页面action 的集合
+import { homePageActions } from '../actionCreators';
+import defaultState from '../types';
+import initState from '../initState';
+import { INCREMENT_ENTHUSIASM,
+    DECREMENT_ENTHUSIASM,
+    USER_FETCH_SUCCEEDED,
+    USER_FETCH_FAILED
+} from '../constants';
+
+export function pageReducers(state = initState,
+                             action: homePageActions): defaultState {
+
+    switch (action.type) {
+        case INCREMENT_ENTHUSIASM:
+            // return { ...state, state.demo.enthusiasmLevel: state.demo.enthusiasmLevel! + 1 };
+            return update(state, {
+                helloData: {
+                    enthusiasmLevel: {
+                        $set: state.helloData.enthusiasmLevel + 1
+                    }
+                }
+            })
+        case DECREMENT_ENTHUSIASM:
+            return update(state, {
+                helloData: {
+                    enthusiasmLevel: {
+                        $set: state.helloData.enthusiasmLevel - 1
+                    }
+                }
+            })
+        // saga work 后续处理
+        case USER_FETCH_SUCCEEDED:
+            return update(state, {
+                homeData: {
+                    data: {
+                        $set: action.message
+                    }
+                }
+            })
+        case USER_FETCH_FAILED:
+            return update(state, {
+                homeData: {
+                    data: {
+                        $set: action.message
+                    }
+                }
+            })
+    }
+    return state;
+}
+```
+这里我遇到一个坑，就是对象返回的时候，ts总是给我报错，对于返回 `newState` 有一定冲突的地方，我这里最初的处理方式是使用 `react-addons-update` 原有的方式已经不再使用，当然你也可以自己写一个自己的合并方法。
+
+别忘记了我们的 types/index.ts 和 initState.ts 也要同步下，可以结合自己的情况进行数据树的划分。这里我就不粘贴代码了，大家可以源码看到。
+
+我在根目录的 store/sagas.ts 进行了code，如下
+
+```typescript
+import { all, fork } from 'redux-saga/effects';
+
+// 导入相关页面的 store
+import homeStore from '../pages/home/store';
+
+export default function* rootSaga() {
+    yield all([
+        fork(homeStore.sagas),
+        // 其他页面 sagas，数组形式
+    ])
+}
+```
+
+这里说明下 `all` 可以对 saga 进行集合，以为数组的形式进行书写，fork方法可以无阻赛的异步操作，达到良好的体验。
+
+我在组件级别进行了 `redux-saga` 使用，使用state时一定要注意自己的数据结构
+
+```typescript
+// https://github.com/DefinitelyTyped/DefinitelyTyped/issues/26840
+import { Dispatch } from 'redux';
+import { connect } from 'react-redux';
+
+import Hello from '../../../components/Hello'
+import * as actions from '../store/actionCreators';
+import { helloState } from '../store/types';
+// import { Props } from '../components/Hello/index';
+
+// 对于使用的组件所在的页面，请按照数据树的解构进行解构，此出home 代表home页面
+export function mapStateToProps({ home: {
+    helloData: { enthusiasmLevel, languageName, data }
+}}: { home: helloState }) {
+    return {
+        enthusiasmLevel,
+        name: languageName,
+        data,
+    }
+}
+
+export function mapDispatchToProps(dispatch: Dispatch<actions.EnthusiasmAction>) {
+    return {
+        onIncrement: () => dispatch(actions.incrementEnthusiasm()),
+        onDecrement: () => dispatch(actions.decrementEnthusiasm()),
+        onGetInitList: (data: number) => dispatch(actions.getInitList(data)),
+    }
+}
+
+export function mergeProps(stateProps: Object, dispatchProps: Object, ownProps: Object) {
+    return Object.assign({}, ownProps, stateProps, dispatchProps);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Hello);
+
+// export default connect<Props>(mapStateToProps, mapDispatchToProps)(Hello);
+
+```
+下面是我在页面级进行了使用，同样结合自己的state结构，如果感觉复杂，可以查看tools
+
+```typescript
+import * as React from 'react';
+import { Dispatch } from 'redux';
+import { connect } from 'react-redux';
+// 引入页面相关组件 ...
+import Hello from './components/Hello';
+import * as actions from "./store/actionCreators";
+
+// 页面布局样式
+import * as styles from './style.less';
+import { homeState } from "./store/types";
+
+export interface Props {
+    data: string;
+    onGetInitList?: (data: number) => void;
+}
+
+class Home extends React.PureComponent<Props, {}> {
+    render() {
+      const { data } = this.props;
+      return (
+          <div>
+              <Hello name='TypeScript' />
+              <div className={styles.pageName}>{ data }</div>
+          </div>
+      )
+    }
+    componentDidMount() {
+        // const { data } = this.props;
+        // console.log(data);
+    }
+}
+
+export function mapStateToProps({ home: {
+    homeData: { data }
+}}: { home: homeState }) {
+    return {
+        data
+    }
+}
+
+export function mapDispatchToProps(dispatch: Dispatch<actions.homePageAction>) {
+    return {
+        onGetInitList: (data: number) => dispatch(actions.getInitList(data)),
+    }
+}
+
+export function mergeProps(stateProps: Object, dispatchProps: Object, ownProps: Object) {
+    return Object.assign({}, ownProps, stateProps, dispatchProps);
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Home);
+
+```
+
+注意在页面级的 `reducer` 中，他所接受的state和我们认为state状态树是有差别的，他 home 这样的标识，如有以为先打印log，当然也可以和我一起探讨。😃
+
+
+### 引入css模块机制
+
+为了理解css模块化思想，我们首先了解下，什么是模块化，在百度百科上的解释是，在系统的结构中，模块是可组合、分解和更换的单元。模块化是一种处理复杂系统分解成为更好的可管理模块的方式。它可以通过在不同组件设定不同的功能，把一个问题分解成多个小的独立、互相作用的组件，来处理复杂、大型的软件。看完模块化，是不是有种拼图的即视感，可以把大图分成各个小图，然后把小图拼成大图，分与合的艺术感。那么css模块化思想，也就是在css编写环境中，用上模块化的思想，把一个大的项目，分解成独立的组件，不同的组件负责不同的功能，最后把模块组装，就成了我们要完成的项目了。
+
+#### css模块化有什么好处
+
+1. 提高代码重用率
+2. 提高开发效率、减少沟通成本
+3. 提高页面容错
+4. 降低耦合
+5. 降低发布风险
+6. 减少Bug定位时间和Fix成本
+7. 更好的实现快速迭代
+8. 便于代码维护
+
+CSS 模块化的解决方案有很多，但主要有两类。一类是彻底抛弃 CSS，使用 JS 或 JSON 来写样式。Radium，jsxstyle，react-style 属于这一类。优点是能给 CSS 提供 JS 同样强大的模块化能力；缺点是不能利用成熟的 CSS 预处理器（或后处理器） Sass/Less/PostCSS，:hover 和 :active 伪类处理起来复杂。另一类是依旧使用 CSS，但使用 JS 来管理样式依赖，代表是 CSS Modules。CSS Modules 能最大化地结合现有 CSS 生态和 JS 模块化能力，API 简洁到几乎零学习成本。发布时依旧编译出单独的 JS 和 CSS。它并不依赖于 React，只要你使用 Webpack，可以在 Vue/Angular/jQuery 中使用。是我认为目前最好的 CSS 模块化解决方案。
+
+这里我对 `*.css` 和 `*.less` 文件进行模块化
+
+```sh
+npm install --save-dev typings-for-css-modules-loader
+```
+
+配置 webpack 文件，针对 `*.css` 这里没有用 css-loader ，用 `typings-for-css-modules-loader` 代替
+
+```javascript
+{
+            test: /\.css$/,
+            use: [
+              require.resolve('style-loader'),
+              // {
+              //   loader: require.resolve('css-loader'),
+              //   options: {
+              //     importLoaders: 1,
+              //   },
+              // },
+              {
+                loader: 'typings-for-css-modules-loader',
+                options: {
+                  modules: true,
+                  namedExport: true
+                }
+              },
+              {
+                loader: require.resolve('postcss-loader'),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: 'postcss',
+                  plugins: () => [
+                    require('postcss-flexbugs-fixes'),
+                    autoprefixer({
+                      browsers: [
+                        '>1%',
+                        'last 4 versions',
+                        'Firefox ESR',
+                        'not ie < 9', // React doesn't support IE8 anyway
+                      ],
+                      flexbox: 'no-2009',
+                    }),
+                  ],
+                },
+              },
+            ],
+          },
+```
+
+针对 less 
+
+```javascript
+{
+            test: /\.less$/,
+            use: [
+              require.resolve('style-loader'),
+              {
+                loader: require.resolve('css-loader'),
+                options: {
+                  importLoaders: 1,
+                  modules: true,
+                  localIdentName: '[name]__[local]__[hash:base64:5]', //
+                },
+              },
+              // {
+              //   loader: 'typings-for-css-modules-loader',
+              //   options: {
+              //     modules: true,
+              //     namedExport: true
+              //   }
+              // },
+              {
+                loader: require.resolve('postcss-loader'),
+                options: {
+                  // Necessary for external CSS imports to work
+                  // https://github.com/facebookincubator/create-react-app/issues/2677
+                  ident: 'postcss',
+                  plugins: () => [
+                    require('postcss-flexbugs-fixes'),
+                    autoprefixer({
+                      browsers: [
+                        '>1%',
+                        'last 4 versions',
+                        'Firefox ESR',
+                        'not ie < 9', // React doesn't support IE8 anyway
+                      ],
+                      flexbox: 'no-2009',
+                    }),
+                  ],
+                },
+              },
+              {
+                loader: require.resolve('less-loader')
+              }
+            ],
+          },
+```
+另外，我在项目中建了个文件 src/declaration/externals.d.ts，防止 ts 报错
+
+```typescript
+declare module '*.less'
+declare module '*.css'
+```
+在 `tsconfig.json` 进行增加配置
+
+```javascript
+"includes": [
+    "./src/declaration/externals.d.ts"
+  ],
+```
+至此，基本操作完成，那么你可以在项目中使用模块化的写法了。
+
+
+
+
+
+
+
+
+
+
+
+
+ 
