@@ -2,7 +2,8 @@
 import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 
-import Hello from '../../../components/Hello'
+// @ts-ignore
+import Hello from '@/components/Hello';
 import * as actions from '../store/actionCreators';
 import { helloState } from '../store/types';
 // import { Props } from '../components/Hello/index';

@@ -3,7 +3,7 @@ import * as React from 'react';
 // css 模块化处理方案
 import * as styles from './index.css';
 
-export interface Props {
+interface Props {
     name: string;
     enthusiasmLevel?: number;
     onIncrement?: () => void;
@@ -22,7 +22,7 @@ export default class Hello extends React.Component<Props, {}> {
             throw new Error('You could be a little more enthusiastic. :D');
         }
         return (
-            <div className={styles['hello']}>
+            <div className={styles.hello}>
                 <div className="greeting">
                     Hello {name + getExclamationMarks(enthusiasmLevel)}
                 </div>

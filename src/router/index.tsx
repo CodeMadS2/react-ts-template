@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Route, IndexRoute } from 'react-router';
 
-import HomePage from '../pages/home';
+import HomePage from '@pages/home';
 
 
 export default (
