@@ -1,36 +1,33 @@
 // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/26840
-import { Dispatch } from 'redux';
-import { connect } from 'react-redux';
+import { Dispatch } from 'redux'
+import { connect } from 'react-redux'
 
-// @ts-ignore
-import Hello from '@/components/Hello';
-import * as actions from '../store/actionCreators';
-import { helloState } from '../store/types';
-// import { Props } from '../components/Hello/index';
+import Hello from '@/components/Hello'
+import * as actions from '../store/actionCreators'
+import { IHelloState } from '../store/types'
 
-// 对于使用的组件所在的页面，请按照数据树的解构进行解构，此出home 代表home页面
+// 涉及到saga数据 state映射到props
 export function mapStateToProps({ home: {
-    helloData: { enthusiasmLevel, languageName, data }
-}}: { home: helloState }) {
+    helloData: { rangeLevel, languageName, data }
+}}: { home: IHelloState }) {
     return {
-        enthusiasmLevel,
+        rangeLevel,
         name: languageName,
         data,
     }
 }
-
-export function mapDispatchToProps(dispatch: Dispatch<actions.EnthusiasmAction>) {
+// 涉及到saga数据 dispatch 映射到props
+export function mapDispatchToProps(dispatch: Dispatch<actions.homePageActions>) {
     return {
         onIncrement: () => dispatch(actions.incrementEnthusiasm()),
-        onDecrement: () => dispatch(actions.decrementEnthusiasm()),
-        onGetInitList: (data: number) => dispatch(actions.getInitList(data)),
+        onDecrement: () => dispatch(actions.decrementEnthusiasm())
     }
 }
 
-export function mergeProps(stateProps: Object, dispatchProps: Object, ownProps: Object) {
-    return Object.assign({}, ownProps, stateProps, dispatchProps);
+export function mergeProps(stateProps: object, dispatchProps: object, ownProps: object) {
+    return Object.assign({}, ownProps, stateProps, dispatchProps)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Hello);
+export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Hello)
 
 // export default connect<Props>(mapStateToProps, mapDispatchToProps)(Hello);

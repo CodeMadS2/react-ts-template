@@ -1,7 +1,7 @@
-import * as React from 'react';
-import { Route, IndexRoute } from 'react-router';
+import * as React from 'react'
+import { Route, IndexRoute } from 'react-router'
 
-import HomePage from '@pages/home';
+import HomePage from '@pages/home'
 
 
 export default (
@@ -12,4 +12,4 @@ export default (
         </Route>
         {/* 自己可以结合自己的业务区拓展*/}
     </Route>
-);
+)

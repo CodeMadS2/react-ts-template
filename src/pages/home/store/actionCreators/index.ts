@@ -1,70 +1,66 @@
 import * as constants from '../constants'
 
-export interface IncrementEnthusiasm {
-    type: constants.INCREMENT_ENTHUSIASM;
+interface IIncrementEnthusiasm {
+    readonly type: constants.INCREMENT_ENTHUSIASM
 }
 
-export interface DecrementEnthusiasm {
-    type: constants.DECREMENT_ENTHUSIASM;
+interface IDecrementEnthusiasm {
+    readonly type: constants.DECREMENT_ENTHUSIASM
 }
 
-export interface GetInitList {
-    type: constants.USER_FETCH_REQUESTED;
+interface IGetInitList {
+    readonly type: constants.USER_FETCH_REQUESTED
     data: number
 }
-// redux-saga 私有
-// export interface InitListAction {
-//     type: constants.INIT_LIST_ACTION;
-//     data: number
-// }
 
-
-export interface UserFetchSucceeded {
-    type: constants.USER_FETCH_SUCCEEDED;
+interface IUserFetchSucceeded {
+    readonly type: constants.USER_FETCH_SUCCEEDED
     message: string
 }
-export interface UserFetchFailed {
-    type: constants.USER_FETCH_FAILED;
+interface IUserFetchFailed {
+    readonly type: constants.USER_FETCH_FAILED
     message: string
 }
 
+
+// 可辨识联合的高级模式
 // 组件级
-export type EnthusiasmAction = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;
+export type EnthusiasmAction = IIncrementEnthusiasm | IDecrementEnthusiasm
 
 // 页面级
-export type homePageAction = GetInitList | UserFetchSucceeded | UserFetchFailed;
+export type homePageAction = IGetInitList | IUserFetchSucceeded | IUserFetchFailed
 
-// 组件级 + 页面级 汇总
-export type homePageActions = IncrementEnthusiasm | DecrementEnthusiasm | GetInitList | UserFetchSucceeded | UserFetchFailed;
+// 组件级 + 页面级 汇总，供reducers和复杂多变情况聚合使用
+export type homePageActions = EnthusiasmAction | homePageAction
 
 
-
-export function incrementEnthusiasm(): IncrementEnthusiasm {
+// actionCreator 导出
+export function incrementEnthusiasm(): IIncrementEnthusiasm {
     return {
         type: constants.INCREMENT_ENTHUSIASM
     }
 }
 
-export function decrementEnthusiasm(): DecrementEnthusiasm {
+export function decrementEnthusiasm(): IDecrementEnthusiasm {
     return {
         type: constants.DECREMENT_ENTHUSIASM
     }
 }
 // redux-sage 异步调用
-export function getInitList(data: number):GetInitList {
+export function getInitList(data: number): IGetInitList {
     return {
         type: constants.USER_FETCH_REQUESTED,
-        data: data
+        data
     }
 }
 
-export function userFetchSucceeded(message: string): UserFetchSucceeded {
+export function userFetchSucceeded(message: string): IUserFetchSucceeded {
     return {
         type: constants.USER_FETCH_SUCCEEDED,
         message
     }
 }
-export function userFetchFailed(message: string): UserFetchFailed {
+export function userFetchFailed(message: string): IUserFetchFailed {
     return {
         type: constants.USER_FETCH_FAILED,
         message

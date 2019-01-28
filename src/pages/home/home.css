@@ -1,0 +1,9 @@
+/* 仅为示例
+ 方便一些组件库样式的设置(类名，内置css)，层级自己控制
+ */
+.global {
+  padding: 5px 10px;
+  text-align: center;
+  color: #fff;
+  background-color: red;
+}

@@ -1,11 +1,109 @@
 {
-  "extends": [],
+  "extends": [
+    "tslint:recommended",
+    "tslint-react",
+    "tslint-config-prettier"
+  ],
   "defaultSeverity": "warning",
+  "jsRules": {},
   "linterOptions": {
     "exclude": [
       "config/**/*.js",
       "node_modules/**/*.ts",
       "coverage/lcov-report/*.js"
     ]
-  }
+  },
+  "rules": {
+    "no-parameter-properties": false,
+    "triple-equals": false,
+    "no-debugger": false,
+    "no-trailing-whitespace": false,
+    "member-ordering": false,
+    "no-this-assignment": [
+      true,
+      {
+        "allowed-names": [
+          "^self$",
+          "^that$"
+        ],
+        "allow-destructuring": true
+      }
+    ],
+    "only-arrow-functions": [
+      false,
+      "allow-declarations",
+      "allow-named-functions"
+    ],
+    "no-empty": [
+      false,
+      "allow-empty-catch"
+    ],
+    "no-for-in-array": false,
+    "return-undefined": false,
+    "ordered-imports": false,
+    "comment-format": [
+      true,
+      "check-space"
+    ],
+    "no-unused-expression": true,
+    "no-var-keyword": true,
+    "triple-equals": true,
+    "no-unnecessary-type-assertion": true,
+    "adjacent-overload-signatures": true,
+    "curly": [
+      true,
+      "ignore-same-line"
+    ],
+    "forin": true,
+    "no-conditional-assignment": true,
+    "no-construct": true,
+    "no-construct": true,
+    "no-duplicate-switch-case": true,
+    "no-duplicate-variable": [
+      true,
+      "check-parameters"
+    ],
+    "no-eval": true,
+    "no-return-await": true,
+    "no-string-throw": true,
+    "indent": [
+      true,
+      "spaces",
+      2
+    ],
+    "no-string-literal": false,
+    "no-duplicate-imports": false,
+    "import-blacklist": true,
+    "quotemark": [
+      true,
+      "single",
+      "jsx-double"
+    ],
+    "semicolon": [
+      true,
+      "never"
+    ],
+    "interface-name": [
+      true,
+      "always-prefix"
+    ],
+    "object-literal-sort-keys": false,
+    "indent": [
+      "error",
+      2
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "semi": [
+      "error",
+      "never"
+    ]
+  },
+  "rulesDirectory": []
 }

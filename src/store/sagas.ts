@@ -1,7 +1,7 @@
-import { all, fork } from 'redux-saga/effects';
+import { all, fork } from 'redux-saga/effects'
 
 // 导入相关页面的 store
-import homeStore from '@pages/home/store';
+import homeStore from '@pages/home/store'
 
 export default function* rootSaga() {
     yield all([

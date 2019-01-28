@@ -134,7 +134,7 @@ import './index.css';
 
 export interface Props {
     name: string,
-    enthusiasmLevel?: number
+    rangeLevel?: number
 }
 
 class Index extends React.Component<Props, object> {
@@ -142,16 +142,16 @@ class Index extends React.Component<Props, object> {
         return Array(numChars + 1).join('!');
     }
     render() {
-        const { name, enthusiasmLevel = 1 } = this.props;
+        const { name, rangeLevel = 1 } = this.props;
         
-        if (enthusiasmLevel <= 0) {
+        if (rangeLevel <= 0) {
             throw new Error('you could be a little more enthusiastic. :D');
         }
         
         return (
             <div className="hello">
                 <div className="greeting">
-                    { name + this.getExclamationMarks(enthusiasmLevel)}
+                    { name + this.getExclamationMarks(rangeLevel)}
                 </div>
             </div>
         );
@@ -287,9 +287,9 @@ import Hello from '../../../components/Hello'
 import * as actions from '../store/actionCreators';
 import { StoreState } from '../store/types';
 
-export function mapStateToProps({ demo: { enthusiasmLevel, languageName } }: StoreState) {
+export function mapStateToProps({ demo: { rangeLevel, languageName } }: StoreState) {
     return {
-        enthusiasmLevel,
+        rangeLevel,
         name: languageName,
     }
 }
@@ -518,19 +518,19 @@ export function pageReducers(state = initState,
 
     switch (action.type) {
         case INCREMENT_ENTHUSIASM:
-            // return { ...state, state.demo.enthusiasmLevel: state.demo.enthusiasmLevel! + 1 };
+            // return { ...state, state.demo.rangeLevel: state.demo.rangeLevel! + 1 };
             return update(state, {
                 helloData: {
-                    enthusiasmLevel: {
-                        $set: state.helloData.enthusiasmLevel + 1
+                    rangeLevel: {
+                        $set: state.helloData.rangeLevel + 1
                     }
                 }
             })
         case DECREMENT_ENTHUSIASM:
             return update(state, {
                 helloData: {
-                    enthusiasmLevel: {
-                        $set: state.helloData.enthusiasmLevel - 1
+                    rangeLevel: {
+                        $set: state.helloData.rangeLevel - 1
                     }
                 }
             })
@@ -591,10 +591,10 @@ import { helloState } from '../store/types';
 
 // 对于使用的组件所在的页面，请按照数据树的解构进行解构，此出home 代表home页面
 export function mapStateToProps({ home: {
-    helloData: { enthusiasmLevel, languageName, data }
+    helloData: { rangeLevel, languageName, data }
 }}: { home: helloState }) {
     return {
-        enthusiasmLevel,
+        rangeLevel,
         name: languageName,
         data,
     }
@@ -810,7 +810,63 @@ declare module '*.css'
 
 ### TypeScript的反思
 
-写着写着，我感觉自己的 `Ts` 写的有点乱，那么我停下来，将对其进行基于架构上的微调整，提供优质代码。 
+写着写着，我感觉自己的 `Ts` 写的有点乱，那么我停下来，将对其进行基于架构上的微调整，提供优质代码。
+
+#### 关于ts的一些调整
+
+前端时间一直在做项目，现在空出时间，具体调整如下：
+
+1.ts的校验规则进行了很大的变动，具体变动我就不列举了，你可以参考 `tslint.json`，另外注意一下 `tsconfig.prod.json` 规则文件
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "sourceMap": false
+  }
+}
+```
+2.深化初始化数据规则，针对 `initState.ts` 中数据进行数据约束，如下：
+
+```typescript
+import {IHelloState, IHomeState} from './types/index'
+export const helloData: IHelloState['helloData'] = {
+    rangeLevel: 1,
+    languageName: 'TypeScript',
+    data: ''
+}
+
+export const homeData: IHomeState['homeData'] = {
+    data: ''
+}
+
+export default {
+    helloData,
+    homeData
+}
+```
+3.将来一些异步网络请求的逻辑进行了拆分(saga中分离)
+
+```javascript
+react-ts-template/
+  src/             // 源码目录
+    utils/			// 工具文件夹	
+    	api.ts       // 存放请求地址
+    	http.ts      // 存放网路请求的基本配置
+    	index.ts.    // 存放常用工具函数
+    services/	      // 请求二级设置(包括二级设置，地址，请求方式)   
+```
+4.考虑到一些样式的设置(有些需求需要antd的样式覆盖，或者类名设置)，我们不能完全把所有的style给模块化了，未此我将 `.less` 引入的文件我们进行初始化，而 `.css` 为我们预留的活口，灵活使用，一句话，能用 `.less` 就用 `.less` ,实在用不了再用 `.css`
+
+5.我对示例的样式进行了调整，和文字说明，大家可以参考说明，自行 clone ，然后进行测试，使用
+
+6.针对打包机制进行了修改，我生产环境进行了处理，对有的暂时用不到的功能和冗余的文件进行了删除，以保证更加简洁的线上代码
+
+### 后面的话
+
+😬写到这里，基本差不多写完了，写的不好，多多指教，后期我会出一些关于前端服务端 `node` 的一些博客，请大家持续关注。
+
+
 
 
 
